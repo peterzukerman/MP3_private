@@ -129,31 +129,18 @@ class Corpus(object):
         """ The E-step updates P(z | w, d)
         """
         print("E step:")
-        topic_prob_sum = 0.0
-        # ############################
-        # your code here
-        # ############################
-        number_of_topics = self.topic_prob.shape[1]
-        for d in range(self.number_of_documents):
-            for z in range(number_of_topics):
-                topic_prob_sum = 0
-                for w in range(self.vocabulary_size):
-                    self.topic_prob[d][z][w]= self.document_topic_prob[d][z] * self.topic_word_prob[z][w]
-                    topic_prob_sum = topic_prob_sum+self.topic_prob[d][z][w]
-                self.topic_prob[d][z] = self.topic_prob[d][z]/topic_prob_sum
-        #print(self.topic_prob.shape)
-            
+        newAxisd = self.topic_word_prob[:, np.newaxis, :]
+        self.topic_prob = self.document_topic_prob.T[:, :, np.newaxis] * newAxisd
+        self.topic_prob = self.topic_prob / np.sum(self.topic_prob, 0)    
 
     def maximization_step(self, number_of_topics):
         """ The M-step updates P(w | z)
         """
         print("M step:")
         
-        # update P(w | z)
-        
         self.document_topic_prob = np.sum(self.topic_prob * self.term_doc_matrix, 2).T
         self.document_topic_prob = normalize(self.document_topic_prob)
-        # update P(z | d)
+
         self.topic_word_prob = np.sum(self.topic_prob * self.term_doc_matrix, 1)
         self.topic_word_prob = normalize(self.topic_word_prob)
         
