@@ -49,7 +49,12 @@ class Corpus(object):
         # your code here
         # #############################
         
-        pass    # REMOVE THIS
+        with open(self.documents_path) as f:
+            content = ''
+            for line in f:
+                content = line.split()
+                self.documents.append(content)
+        self.number_of_documents = len(self.documents)
 
     def build_vocabulary(self):
         """
@@ -62,7 +67,13 @@ class Corpus(object):
         # your code here
         # #############################
         
-        pass    # REMOVE THIS
+        unique = []
+        for doc in self.documents:
+            for word in doc:
+                unique.append(word)
+        self.vocabulary[:] = [x for x in unique if x]
+        self.vocabulary = list(set(self.vocabulary))
+        self.vocabulary_size = len(self.vocabulary)
 
     def build_term_doc_matrix(self):
         """
@@ -74,9 +85,7 @@ class Corpus(object):
         # ############################
         # your code here
         # ############################
-        
-        pass    # REMOVE THIS
-
+        self.term_doc_matrix = np.array([[document.count(word) for word in self.vocabulary] for document in self.documents])
 
     def initialize_randomly(self, number_of_topics):
         """
@@ -90,7 +99,11 @@ class Corpus(object):
         # your code here
         # ############################
 
-        pass    # REMOVE THIS
+        self.document_topic_prob = np.random.random_sample((self.number_of_documents, number_of_topics))
+        self.document_topic_prob = normalize(self.document_topic_prob)
+
+        self.topic_word_prob = np.random.random_sample((number_of_topics, len(self.vocabulary)))
+        self.topic_word_prob = normalize(self.topic_word_prob)
         
 
     def initialize_uniformly(self, number_of_topics):
@@ -124,8 +137,11 @@ class Corpus(object):
         # ############################
         # your code here
         # ############################
-
-        pass    # REMOVE THIS
+        newAxisD = self.document_topic_prob.T[:, :, np.newaxis]
+        newAxisTopic = self.topic_word_prob[:, np.newaxis, :]
+        nonNormalized =  newAxisD * newAxisTopic
+        self.topic_prob = nonNormalized / np.sum(self.topic_prob, 0)
+        #print(self.topic_prob.shape)
             
 
     def maximization_step(self, number_of_topics):
@@ -135,19 +151,12 @@ class Corpus(object):
         
         # update P(w | z)
         
-        # ############################
-        # your code here
-        # ############################
-
-        
+        self.document_topic_prob = np.sum(self.topic_prob * self.term_doc_matrix, 2).T
+        self.document_topic_prob = normalize(self.document_topic_prob)
         # update P(z | d)
-
-        # ############################
-        # your code here
-        # ############################
+        self.topic_word_prob = np.sum(self.topic_prob * self.term_doc_matrix, 1)
+        self.topic_word_prob = normalize(self.topic_word_prob)
         
-        pass    # REMOVE THIS
-
 
     def calculate_likelihood(self, number_of_topics):
         """ Calculate the current log-likelihood of the model using
@@ -159,8 +168,11 @@ class Corpus(object):
         # ############################
         # your code here
         # ############################
-        
-        return
+        matrixProd = np.matmul(self.document_topic_prob, self.topic_word_prob) * self.term_doc_matrix
+        logProd = np.log(matrixProd)
+        likelihood = np.sum(logProd)
+        self.likelihoods.append(likelihood)
+        return likelihood
 
     def plsa(self, number_of_topics, max_iter, epsilon):
 
@@ -186,27 +198,30 @@ class Corpus(object):
         for iteration in range(max_iter):
             print("Iteration #" + str(iteration + 1) + "...")
 
-            # ############################
-            # your code here
-            # ############################
+            self.expectation_step()
+            self.maximization_step(number_of_topics)
+            old_likelihood = current_likelihood
+            current_likelihood = self.calculate_likelihood(number_of_topics)
+            if abs(current_likelihood - old_likelihood) < epsilon:
+                break
 
-            pass    # REMOVE THIS
 
 
 
 def main():
-    documents_path = 'data/test.txt'
+    documents_path = 'test1.txt'
     corpus = Corpus(documents_path)  # instantiate corpus
     corpus.build_corpus()
     corpus.build_vocabulary()
-    print(corpus.vocabulary)
+    #print(corpus.vocabulary)
     print("Vocabulary size:" + str(len(corpus.vocabulary)))
     print("Number of documents:" + str(len(corpus.documents)))
     number_of_topics = 2
     max_iterations = 50
     epsilon = 0.001
     corpus.plsa(number_of_topics, max_iterations, epsilon)
-
+    print(corpus.vocabulary)
+    print(corpus.topic_word_prob)
 
 
 if __name__ == '__main__':
