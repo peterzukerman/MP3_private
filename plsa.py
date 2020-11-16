@@ -209,7 +209,7 @@ class Corpus(object):
 
 
 def main():
-    documents_path = 'DBLP.txt'
+    documents_path = 'data/DBLP.txt'
     corpus = Corpus(documents_path)  # instantiate corpus
     corpus.build_corpus()
     corpus.build_vocabulary()
