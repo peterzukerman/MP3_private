@@ -60,7 +60,6 @@ class Corpus(object):
         """
         Construct a list of unique words in the whole corpus. Put it in self.vocabulary
         for example: ["rain", "the", ...]
-
         Update self.vocabulary_size
         """
         # #############################
@@ -79,7 +78,6 @@ class Corpus(object):
         """
         Construct the term-document matrix where each row represents a document, 
         and each column represents a vocabulary term.
-
         self.term_doc_matrix[i][j] is the count of term j in document i
         """
         # ############################
@@ -91,7 +89,6 @@ class Corpus(object):
         """
         Randomly initialize the matrices: document_topic_prob and topic_word_prob
         which hold the probability distributions for P(z | d) and P(w | z): self.document_topic_prob, and self.topic_word_prob
-
         Don't forget to normalize! 
         HINT: you will find numpy's random matrix useful [https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.random.html]
         """
@@ -110,7 +107,6 @@ class Corpus(object):
         """
         Initializes the matrices: self.document_topic_prob and self.topic_word_prob with a uniform 
         probability distribution. This is used for testing purposes.
-
         DO NOT CHANGE THIS FUNCTION
         """
         self.document_topic_prob = np.ones((self.number_of_documents, number_of_topics))
@@ -129,16 +125,22 @@ class Corpus(object):
         else:
             self.initialize_uniformly(number_of_topics)
 
-    def expectation_step(self):
+    def expectation_step(self, number_of_topics):
         """ The E-step updates P(z | w, d)
         """
         print("E step:")
-        
+        topic_prob_sum = 0.0
         # ############################
         # your code here
         # ############################
-        nonNormalized = self.document_topic_prob.T[:, :, np.newaxis] * self.topic_word_prob[:, np.newaxis, :]
-        self.topic_prob = nonNormalized / np.sum(self.topic_prob, 0)
+        number_of_topics = self.topic_prob.shape[1]
+        for d in range(self.number_of_documents):
+            for z in range(number_of_topics):
+                topic_prob_sum = 0
+                for w in range(self.vocabulary_size):
+                    self.topic_prob[d][z][w]= self.document_topic_prob[d][z] * self.topic_word_prob[z][w]
+                    topic_prob_sum = topic_prob_sum+self.topic_prob[d][z][w]
+                self.topic_prob[d][z] = self.topic_prob[d][z]/topic_prob_sum
         #print(self.topic_prob.shape)
             
 
@@ -161,7 +163,6 @@ class Corpus(object):
         the model's updated probability matrices
         
         Append the calculated log-likelihood to self.likelihoods
-
         """
         # ############################
         # your code here
@@ -196,7 +197,7 @@ class Corpus(object):
         for iteration in range(max_iter):
             print("Iteration #" + str(iteration + 1) + "...")
 
-            self.expectation_step()
+            self.expectation_step(number_of_topics)
             self.maximization_step(number_of_topics)
             old_likelihood = current_likelihood
             current_likelihood = self.calculate_likelihood(number_of_topics)
@@ -207,7 +208,7 @@ class Corpus(object):
 
 
 def main():
-    documents_path = 'data/DBLP.txt'
+    documents_path = 'test1.txt'
     corpus = Corpus(documents_path)  # instantiate corpus
     corpus.build_corpus()
     corpus.build_vocabulary()
