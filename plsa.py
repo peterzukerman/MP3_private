@@ -137,7 +137,7 @@ class Corpus(object):
         # ############################
         # your code here
         # ############################
-        self.topic_prob = self.document_topic_prob.T[:, :, np.newaxis] * self.topic_word_prob[:, np.newaxis, :]
+        nonNormalized = self.document_topic_prob.T[:, :, np.newaxis] * self.topic_word_prob[:, np.newaxis, :]
         self.topic_prob = nonNormalized / np.sum(self.topic_prob, 0)
         #print(self.topic_prob.shape)
             
